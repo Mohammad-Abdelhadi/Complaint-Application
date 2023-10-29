@@ -142,7 +142,7 @@ namespace Complaint_Application.Controllers
                         // Extract data from response if necessary
                         // var responseData = await response.Content.ReadAsStringAsync();
                         // Pass necessary data to the view
-                        return View("Index"); // Replace "SuccessView" with your actual success view name
+                        return RedirectToAction("Index"); // Replace "SuccessView" with your actual success view name
                     }
                     else
                     {
@@ -162,6 +162,83 @@ namespace Complaint_Application.Controllers
                 return BadRequest("Invalid model state or file is missing.");
             }
         }
+
+
+        public IActionResult CreateArabic()
+        {
+            var userObjectJson = HttpContext.Session.GetString("UserObject");
+
+            if (!string.IsNullOrEmpty(userObjectJson))
+            {
+                var user = JsonConvert.DeserializeObject<User>(userObjectJson);
+                ViewBag.UserObjectJson = user.Id; // Assuming UserId is the property you want to pass to the view
+            }
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateArabic(Complaint complaint)
+        {
+            var userObjectJson = HttpContext.Session.GetString("UserObject");
+            var userObject = JsonConvert.DeserializeObject<User>(userObjectJson);
+
+            if (complaint.File != null && complaint.File.Length > 0 && ModelState.IsValid)
+            {
+                try
+                {
+                    // Save image to a specific directory within the project
+                    string uploadDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Uploads");
+                    if (!Directory.Exists(uploadDirectory))
+                    {
+                        Directory.CreateDirectory(uploadDirectory);
+                    }
+                    string uniqueId = Guid.NewGuid().ToString().Substring(0, 5);
+
+                    // Save the file
+                    string fileName = uniqueId + Path.GetExtension(complaint.File.FileName);
+                    string filePath = Path.Combine(uploadDirectory, fileName);
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await complaint.File.CopyToAsync(fileStream);
+                    }
+
+                    // Set the FileName property of the model to the file name
+                    complaint.FileName = fileName;
+                    complaint.UserId = userObject.Id;
+                    // Serialize the complaint object to JSON
+                    var jsonContent = new StringContent(JsonConvert.SerializeObject(complaint), Encoding.UTF8, "application/json");
+
+                    // Send a POST request 
+                    HttpResponseMessage response = await _httpClient.PostAsync("api/Complaint/sendcomplaint", jsonContent);
+
+                    // Handle the API response
+                    if (response.IsSuccessStatusCode)
+                    {
+                        // Extract data from response if necessary
+                        // var responseData = await response.Content.ReadAsStringAsync();
+                        // Pass necessary data to the view
+                        return RedirectToAction("Index"); // Replace "SuccessView" with your actual success view name
+                    }
+                    else
+                    {
+                        // Handle API error and return appropriate view
+                        return View("ErrorView"); // Replace "ErrorView" with your actual error view name
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Handle exceptions here
+                    return BadRequest($"Failed to create. Error: {ex.Message}");
+                }
+            }
+            else
+            {
+                // Handle invalid model state or missing file
+                return BadRequest("Invalid model state or file is missing.");
+            }
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> Register(User req)
@@ -183,7 +260,7 @@ namespace Complaint_Application.Controllers
                         // Assuming userData is a JSON string representing user data received from the API
                         ViewBag.UserObjectJson = userObjectJson;
 
-                        return View("Index", userData);
+                        return RedirectToAction("Login");
                     }
 
                     else
@@ -210,7 +287,7 @@ namespace Complaint_Application.Controllers
             // If the user is already logged in, redirect them to the index page
             if (!string.IsNullOrEmpty(userObjectJson))
             {
-                return RedirectToAction("Index", "auth"); // Assuming "Home" is your controller for the index page
+                return RedirectToAction("Index"); // Assuming "Home" is your controller for the index page
             }
 
             return View();
@@ -245,7 +322,38 @@ namespace Complaint_Application.Controllers
             }
             return View();
         }
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Clear();
+            return RedirectToAction("Index");
+        }
+        [HttpPost]
+        public async Task<IActionResult> Accept(int id, Complaint updatedComplaint)
+        {
+        
+            updatedComplaint.IsApproved = true;
+            // Your logic to call the API endpoint and edit the complaint
+            try
+            {
+                HttpResponseMessage response = await _httpClient.PutAsync($"api/Complaint/EditComplaint/{id}", null);
 
-
+                if (response.IsSuccessStatusCode)
+                {
+                    // Handle successful API response if needed
+                    return RedirectToAction("Index"); // Redirect to the appropriate page after accepting the complaint
+                }
+                else
+                {
+                    // Handle API error and return appropriate view or message
+                    return View("ErrorView"); // Replace "ErrorView" with your actual error view name
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions here
+                return BadRequest($"Failed to accept complaint. Error: {ex.Message}");
+            }
+        }
     }
 }
+
