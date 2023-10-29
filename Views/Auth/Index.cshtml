@@ -1,0 +1,64 @@
+﻿@{
+    var userObjectJson = ViewBag.UserObjectJson;
+}
+
+
+@if (!string.IsNullOrEmpty(userObjectJson))
+{
+    <script>
+        // Parse the JSON data received from the controller action
+        var userData = @Html.Raw(userObjectJson);
+
+        // Check if userData is not empty (user is logged in)
+        if (userData) {
+            // Save user data in session storage
+            sessionStorage.setItem('userData', JSON.stringify(userData));
+            console.log('User data saved in session storage:', userData);
+        }
+    </script>
+    <div class="d-flex justify-content-between">
+        <h1>Complaints</h1>
+        <a class="btn btn-primary px-3" asp-action="Create">+ Create </a>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Complaint Text</th>
+                    <th> Image</th>
+                  <th>Language</th>
+                    <th>Is Approved</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var complaint in Model)
+                {
+                    <tr>
+                        <td>@complaint.Id</td>
+                        <td>@complaint.ComplaintText</td>
+                        <td>
+                            
+                            <img src="~/Uploads/@complaint.FileName" style="width: 100px;
+    border-radius: 50%;
+    height: 100px;" alt="Complaint Image">
+                        </td>
+                        <td>@complaint.Language</td>
+                        <td>@complaint.IsApproved</td>
+@*                         @if (userObjectJson.Role == "user")
+                        {
+                            <td>Im user</td>
+                        }
+                        else if (userObjectJson.Role == "admin")
+                        {
+                            <td>Admin is here</td>
+                            <td>Accept</td>
+                        }
+ *@                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
