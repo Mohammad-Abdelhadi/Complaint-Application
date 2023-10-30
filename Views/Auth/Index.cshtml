@@ -56,7 +56,7 @@
                             <td>@complaint.Id</td>
                             <td>@complaint.ComplaintText</td>
                             <td>
-                                <img src="~/Uploads/@complaint.FileName" style="width: 100px; border-radius: 50%; height: 100px;" alt="Complaint Image">
+                                <img src="~/Uploads/@complaint.FileName" style="width: 100px; border-radius: 50%; height: 100px;" >
                             </td>
                             <td>@complaint.Language</td>
                              <td>@complaint.IsApproved</td>
@@ -91,14 +91,14 @@
                                     <span class="btn btn-primary">
                                         DownLoad
                                     </span>
-                                    <img src="~/Uploads/@complaint.FileName" style="width: 100px; border-radius: 50%; height: 100px;" alt="Complaint Image">
+                                    <img src="~/Uploads/@complaint.FileName" style="width: 100px; border-radius: 50%; height: 100px;">
                                 </a>
                             </td>
                             <td>@complaint.IsApproved</td>
                             @if (@complaint.IsApproved == false)
                             {
                                 <td>
-                                    <a asp-action="Accept" asp-route-id="@complaint.Id" class="btn btn-success" onclick="return confirm('Are you sure you want to accept this complaint?')"> Accept</a>
+                                    <a asp-action="AcceptView" asp-controller="Auth" asp-route-id="@complaint.Id" class="btn btn-success"> Accept</a>
                                     <a asp-action="Reject" asp-route-id="@complaint.Id" class="btn btn-danger" onclick="return confirm('Are you sure you want to reject this complaint?')"> Reject</a>
                                 </td>
                             }

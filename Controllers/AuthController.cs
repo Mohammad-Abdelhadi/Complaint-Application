@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,9 +25,9 @@ namespace Complaint_Application.Controllers
             {
                 BaseAddress = new Uri("https://localhost:7098/")
 
-        };
+            };
         }
-    
+
 
         [HttpGet]
         public async Task<IActionResult> Index(int Id)
@@ -327,33 +328,70 @@ namespace Complaint_Application.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Index");
         }
-        [HttpPost]
-        public async Task<IActionResult> Accept(int id, Complaint updatedComplaint)
+        //[HttpGet("{id}")]
+        //public async Task<IActionResult> AcceptView(int id)
+        //{
+        //    try
+        //    {
+        //        // Fetch the existing complaint from the API based on the provided id
+        //        HttpResponseMessage response = await _httpClient.GetAsync($"api/Complaint/GetSingleComplaint/{id}");
+
+        //        if (response.IsSuccessStatusCode)
+        //        {
+        //            // Deserialize the response content to Complaint object
+        //            var jsonContent = await response.Content.ReadAsStringAsync();
+        //            var existingComplaint = JsonConvert.DeserializeObject<Complaint>(jsonContent);
+
+        //            // Pass the existing complaint to the view
+        //            return View(existingComplaint);
+        //        }
+        //        else
+        //        {
+        //            // Handle the response status code or content for failure
+        //            return View();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Handle the exception, e.g., log it, show an error message to the user, etc.
+        //        return View();
+        //    }
+        //}
+
+        [HttpGet]
+        public IActionResult AcceptView()
         {
-        
-            updatedComplaint.IsApproved = true;
-            // Your logic to call the API endpoint and edit the complaint
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> AcceptView(int id, Complaint updatedComplaint)
+        {
             try
             {
-                HttpResponseMessage response = await _httpClient.PutAsync($"api/Complaint/EditComplaint/{id}", null);
+ 
+                var json = JsonConvert.SerializeObject(updatedComplaint);
+                var jsonContent = new StringContent(json, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await _httpClient.PutAsync($"api/Complaint/EditComplaint/{id}", jsonContent);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Handle successful API response if needed
-                    return RedirectToAction("Index"); // Redirect to the appropriate page after accepting the complaint
+                    // Handle the response if needed
+                    return RedirectToAction("Index"); // Or any other action result for success
                 }
                 else
                 {
-                    // Handle API error and return appropriate view or message
-                    return View("ErrorView"); // Replace "ErrorView" with your actual error view name
+                    // Handle the response status code or content for failure
+                    return View("Index"); // Or any other action result for error
                 }
             }
             catch (Exception ex)
             {
-                // Handle exceptions here
-                return BadRequest($"Failed to accept complaint. Error: {ex.Message}");
+                // Handle the exception, e.g., log it, show an error message to the user, etc.
+                return View("Index"); // Or any other action result for error
             }
         }
+
     }
 }
 
